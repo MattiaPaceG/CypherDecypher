@@ -23,7 +23,7 @@ class CipherToolGUI:
 
         #constant
         font_size_title = 24
-        font_size_entries = 18
+        font_size_entries = 14
 
 
         # ENCRYPTION SECTION

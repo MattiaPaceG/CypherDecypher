@@ -66,10 +66,11 @@ class Cypher_Decypher():
             result = result + text_to_keep
 
         else:
+            text = text.replace(" ", "  ")
             text_to_change = text[0:value*2]
             text_to_keep = text[value*2:]
 
-            text_to_change = text_to_change.replace(" ", "  ")
+
             print(text_to_change)
 
             splitted = [text_to_change[i:i+2] for i in range (0, len(text_to_change), 2)]
