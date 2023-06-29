@@ -8,6 +8,10 @@ class Cypher_Decypher():
         self.char_to_hex_dict = {}
         self.hex_to_char_dict = {}
         self.char_list = []
+        self.hex_list = []
+
+        self.char_to_hex_dict[" "] = 20
+        self.hex_to_char_dict["20"] = " "
 
         with open("ASCII.json", encoding="utf8") as json_file:
             ascii_chars = json.load(json_file)["ASCII"]
@@ -20,103 +24,83 @@ class Cypher_Decypher():
                 if (char.strip() != "" and int(index) >= 40):
                     self.char_to_hex_dict[char] = hex
                     self.hex_to_char_dict[hex] = char
-                    self.char_list.append(char)
 
+        self.char_list = list(self.char_to_hex_dict.keys())
+        self.hex_list =list(self.hex_to_char_dict.keys())
 
-    def caesar(self, text, shift, encryption=True):
+    def caesar(self, text, shift, encryption=True, hexa=False):
 
-        result = ""
+        result = []
+        digits = 1
+        list_to_use = self.char_list
 
-        for char in text:
+        if hexa:
+            digits = 2
+            list_to_use = self.hex_list
+
+        splitted_input = [text[i:i + digits] for i in range(0, len(text), digits)]
+        print(splitted_input)
+
+        for char in splitted_input:
+            print(char)
             if char == " ":
-                result = result + char
+                result.append(" ")
             else:
-                char_index = self.char_list.index(char)
+                char_index = int(list_to_use.index(char))
+                print(char_index)
                 if encryption:
-                    shifted_index = char_index + shift
-                    if shifted_index > len(self.char_list) - 1:
-                        shifted_index = shifted_index - len(self.char_list)
-                    result = result + self.char_list[shifted_index]
-
+                    shifted_index = char_index + int(shift)
+                    if shifted_index > len(list_to_use) - 1:
+                        shifted_index = shifted_index - len(list_to_use)
                 else:
-                    shifted_index = char_index - shift
+                    shifted_index = char_index - int(shift)
                     if shifted_index < 0:
-                        shifted_index = len(self.char_list) - shifted_index
-                    result = result + self.char_list[shifted_index]
+                        shifted_index = len(list_to_use) - shifted_index
 
-        return result
+                result.append(str(list_to_use[shifted_index]))
 
-    def hexa(self, text, value, encryption = True):
+        joined = "".join(result)
+        return joined
 
-        result = ""
+    def to_hex(self, text):
+        hexa_txt = ""
 
-        if value == "all":
-            value = len(text)
-
-        if encryption:
-            text_to_change = text[0:value]
-            text_to_keep = text[value:]
-
-            for char in text_to_change:
-                if char == " ":
-                    result = result + " "
-                else:
-                    result = result + self.char_to_hex_dict[char]
-
-            result = result + text_to_keep
-
-        else:
-            text = text.replace(" ", "  ")
-            text_to_change = text[0:value*2]
-            text_to_keep = text[value*2:]
-
-
-            print(text_to_change)
-
-            splitted = [text_to_change[i:i+2] for i in range (0, len(text_to_change), 2)]
-            print(splitted)
-
-            try:
-                for part in splitted:
-                    if part == "  ":
-                        result = result + " "
-                    else:
-                        result = result + self.hex_to_char_dict[part]
-
-                result = result + text_to_keep
-
-                return result
-            except KeyError:
-                messagebox.showerror("IMPOSSIBLE TO DECRYPT", "Values entered are not valid for decrypting")
-
-        return result
-
-
-
-
-    def encrypt(self, text, caesar, hexa):
-        caesar = self.caesar(text, caesar)
-        hexa = self.hexa(caesar, hexa)
-
-        return (caesar, hexa)
-
-
-    def decrypt(self, text, caesar, hexa):
-        reverse_hexa = self.hexa(text, hexa, encryption=False)
-        reverse_caesar = self.caesar(reverse_hexa, caesar, encryption=False)
-
-        return (reverse_caesar, reverse_hexa)
-
-    def check_input(self, text, caesar, hexa):
-
-        text_dim = len(text)
         for char in text:
-            if char not in self.char_list and char != " ":
-                return (False, 1)
+            hexa_txt = hexa_txt + str(self.char_to_hex_dict[char])
 
-        if hexa != "all":
-            if hexa > text_dim:
-                return (False, 2)
+        return (hexa_txt)
+
+    def to_txt(self, text):
+        splitted_text = [text[i:i + 2] for i in range(0, len(text), 2)]
+        result = []
+
+        for digit in splitted_text:
+            result.append(str(self.hex_to_char_dict[digit]))
+
+        joined_result = "".join(result)
+        return joined_result
+
+
+    def encrypt(self, text, caesar_shift, hexa_shift):
+        caesar = self.caesar(text, caesar_shift)
+        to_hexa = self.to_hex(caesar)
+        shifted_hexa = self.caesar(to_hexa, hexa_shift, hexa=True)
+
+        return (caesar, to_hexa, shifted_hexa)
+
+
+    def decrypt(self, text, caesar_shift, hexa_shift):
+        reverse_hexa = self.caesar(text, hexa_shift, encryption=False, hexa=True)
+        to_text = self.to_txt(reverse_hexa)
+        reverse_caesar = self.caesar(to_text, caesar_shift, encryption=False)
+
+        return (reverse_hexa, to_text, reverse_caesar)
+
+    def check_input(self, text):
+
+        for char in text:
+            if char not in self.char_list:
+                return (False, 1)
 
         return (True, 0)
 
